@@ -288,10 +288,11 @@ function isCheckedIn(status) {
 }
 
 function isConfigured() {
-  if (!CONFIG.API_URL || CONFIG.API_URL === "https://script.google.com/macros/s/AKfycbzoqoyI-R2-ZdzGrI2bonfdU5ugYij0UfgHmVKsLilQJUK9t4W_MNyl7I7g50aG2VW8sg/exec") {
+  if (!CONFIG.API_URL) {
     showMessage("Please configure the Google Apps Script URL in script.js.", "error");
     return false;
   }
+
   return true;
 }
 
