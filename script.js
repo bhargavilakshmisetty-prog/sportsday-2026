@@ -1,3 +1,4 @@
+// Sports Day Stemathon 2026 - API connected
 const CONFIG = {
   API_URL: "https://script.google.com/macros/s/AKfycbzoqoyI-R2-ZdzGrI2bonfdU5ugYij0UfgHmVKsLilQJUK9t4W_MNyl7I7g50aG2VW8sg/exec",
   SCHOOL_NAME: "CHRYSALIS SCHOOL",
