@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1f6fe5">
+  <title>Sports Day Stemathon 2026</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="hero">
+      <div class="trophy" aria-hidden="true">🏆</div>
+      <h1>Sports Day Stemathon</h1>
+      <p>Enter ID, Name, or Phone to find your Zone and Directions</p>
+      <small>Eg: FName LName or 9xxxxxxxxx</small>
+    </header>
+
+    <section class="search-panel" aria-label="Student search">
+      <form id="searchForm">
+        <label class="sr-only" for="searchInput">Student ID, name, or phone</label>
+        <input id="searchInput" type="search" autocomplete="off"
+               placeholder="Enter ID, Name, or Phone" maxlength="100">
+        <button class="btn btn-primary" type="submit">Search</button>
+      </form>
+    </section>
+
+    <div id="message" class="message" role="status" aria-live="polite"></div>
+
+    <section id="results" class="results" hidden></section>
+
+    <footer class="footer">
+      <span>CHRYSALIS SCHOOL</span>
+      <span>SPORTS DAY STEMATHON 2026</span>
+    </footer>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>

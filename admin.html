@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sports Day Admin</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .admin-wrap { max-width: 650px; margin: 0 auto; padding: 24px 16px; }
+    .admin-card { background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:20px; margin-bottom:16px; }
+    .admin-card h1 { margin-top:0; color:#102d50; }
+    .admin-input { width:100%; min-height:54px; border:2px solid #222; border-radius:12px; padding:10px 14px; margin:8px 0 12px; }
+    .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .stat { padding:18px 8px; background:#f5f8fb; border-radius:12px; text-align:center; }
+    .stat strong { display:block; font-size:28px; }
+    .stat span { color:#6d7278; font-size:13px; font-weight:700; }
+    .admin-note { color:#6d7278; line-height:1.5; }
+    .logout { margin-top:10px; min-height:48px; }
+    @media(max-width:420px){ .stats{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+  <main class="admin-wrap">
+    <section class="admin-card">
+      <h1>🏆 Sports Day Admin</h1>
+      <p class="admin-note">This dashboard requires the Admin Token configured in Google Apps Script. Do not share the token.</p>
+      <label for="token">Admin Token</label>
+      <input id="token" class="admin-input" type="password" autocomplete="off">
+      <button id="loadBtn" class="btn btn-primary" type="button">Load Dashboard</button>
+      <div id="msg" class="message"></div>
+    </section>
+
+    <section id="dashboard" class="admin-card" hidden>
+      <div class="stats">
+        <div class="stat"><strong id="total">0</strong><span>TOTAL STUDENTS</span></div>
+        <div class="stat"><strong id="checked">0</strong><span>CHECKED IN</span></div>
+        <div class="stat"><strong id="pending">0</strong><span>PENDING</span></div>
+      </div>
+      <button id="logoutBtn" class="btn btn-secondary logout" type="button">Log Out</button>
+    </section>
+  </main>
+
+<script>
+const CONFIG = {
+  API_URL: "https://script.google.com/macros/s/AKfycbzoqoyI-R2-ZdzGrI2bonfdU5ugYij0UfgHmVKsLilQJUK9t4W_MNyl7I7g50aG2VW8sg/exec"
+};
+
+const tokenInput = document.getElementById("token");
+const loadBtn = document.getElementById("loadBtn");
+const msg = document.getElementById("msg");
+const dashboard = document.getElementById("dashboard");
+
+loadBtn.addEventListener("click", loadDashboard);
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  tokenInput.value = "";
+  dashboard.hidden = true;
+  show("Logged out.", "info");
+});
+
+async function loadDashboard() {
+  if (CONFIG.API_URL === "https://script.google.com/macros/s/AKfycbzoqoyI-R2-ZdzGrI2bonfdU5ugYij0UfgHmVKsLilQJUK9t4W_MNyl7I7g50aG2VW8sg/exec") {
+    show("Configure the Apps Script URL in admin.html.", "error");
+    return;
+  }
+  const token = tokenInput.value.trim();
+  if (!token) {
+    show("Enter the Admin Token.", "error");
+    return;
+  }
+
+  loadBtn.disabled = true;
+  loadBtn.textContent = "Loading...";
+  try {
+    const url = new URL(CONFIG.API_URL);
+    url.searchParams.set("action", "stats");
+    url.searchParams.set("token", token);
+    const response = await fetch(url, {cache:"no-store"});
+    const data = await response.json();
+
+    if (!data.success) throw new Error(data.message || "Access denied");
+
+    document.getElementById("total").textContent = data.stats.total;
+    document.getElementById("checked").textContent = data.stats.checkedIn;
+    document.getElementById("pending").textContent = data.stats.pending;
+    dashboard.hidden = false;
+    show("Dashboard loaded.", "success");
+  } catch (e) {
+    dashboard.hidden = true;
+    show("Unable to load dashboard. Check the token and API URL.", "error");
+  } finally {
+    loadBtn.disabled = false;
+    loadBtn.textContent = "Load Dashboard";
+  }
+}
+
+function show(text, type) {
+  msg.textContent = text;
+  msg.className = "message show " + type;
+}
+</script>
+</body>
+</html>

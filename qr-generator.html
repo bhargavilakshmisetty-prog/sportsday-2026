@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sports Day QR Generator</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    .qr-page { max-width:1100px; margin:0 auto; padding:20px; }
+    .control-card { background:#fff; border:1px solid #e3e7eb; border-radius:16px; padding:20px; margin-bottom:20px; }
+    .control-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .admin-input { width:100%; min-height:50px; padding:10px 13px; border:2px solid #222; border-radius:10px; }
+    .cards { display:grid; grid-template-columns:repeat(2, 1fr); gap:18px; }
+    .qr-card { min-height:360px; background:#fff; border:1px solid #222; border-radius:10px; padding:20px; text-align:center; break-inside:avoid; page-break-inside:avoid; }
+    .qr-card h2 { margin:0 0 5px; font-size:20px; }
+    .qr-card h3 { margin:0 0 14px; font-size:16px; }
+    .qr-card .student { font-size:20px; font-weight:800; }
+    .qr-card .details { margin:10px 0 14px; line-height:1.6; }
+    .qr-box { min-height:150px; display:flex; justify-content:center; align-items:center; }
+    .hint { color:#68727b; line-height:1.5; }
+    @media(max-width:650px){ .control-grid,.cards{grid-template-columns:1fr;} }
+    @media print {
+      body { background:#fff; }
+      .controls { display:none !important; }
+      .qr-page { padding:0; }
+      .cards { grid-template-columns:repeat(2, 1fr); gap:10mm; }
+      .qr-card { border:1px solid #000; }
+    }
+  </style>
+</head>
+<body>
+<main class="qr-page">
+  <section class="control-card controls">
+    <h1>CHRYSALIS SCHOOL<br>Sports Day Stemathon 2026</h1>
+    <p class="hint">Enter the Admin Token to load students. QR cards use the GitHub Pages student URL with the student's ID.</p>
+    <div class="control-grid">
+      <div>
+        <label for="token">Admin Token</label>
+        <input id="token" class="admin-input" type="password">
+      </div>
+      <div>
+        <label for="baseUrl">GitHub Pages URL</label>
+        <input id="baseUrl" class="admin-input" value="https://chrysalisschoolsportsday.github.io/Sportsday-2026/">
+      </div>
+    </div>
+    <br>
+    <button id="loadBtn" class="btn btn-primary" type="button">Load Students</button>
+    <button id="printBtn" class="btn btn-secondary" type="button" style="margin-top:10px" disabled>Print A4 QR Cards</button>
+    <div id="msg" class="message"></div>
+  </section>
+
+  <section id="cards" class="cards"></section>
+</main>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbzoqoyI-R2-ZdzGrI2bonfdU5ugYij0UfgHmVKsLilQJUK9t4W_MNyl7I7g50aG2VW8sg/exec";
+const loadBtn = document.getElementById("loadBtn");
+const printBtn = document.getElementById("printBtn");
+const cards = document.getElementById("cards");
+const msg = document.getElementById("msg");
+
+loadBtn.addEventListener("click", loadStudents);
+printBtn.addEventListener("click", () => window.print());
+
+async function loadStudents() {
+  if (API_URL === "https://script.google.com/macros/s/AKfycbzoqoyI-R2-ZdzGrI2bonfdU5ugYij0UfgHmVKsLilQJUK9t4W_MNyl7I7g50aG2VW8sg/exec") {
+    show("Configure the Apps Script URL in qr-generator.html.", "error");
+    return;
+  }
+
+  const token = document.getElementById("token").value.trim();
+  const baseUrl = document.getElementById("baseUrl").value.trim().replace(/\/?$/, "/");
+  if (!token) return show("Enter the Admin Token.", "error");
+
+  loadBtn.disabled = true;
+  loadBtn.textContent = "Loading...";
+  cards.innerHTML = "";
+
+  try {
+    const url = new URL(API_URL);
+    url.searchParams.set("action", "listStudents");
+    url.searchParams.set("token", token);
+
+    const response = await fetch(url, {cache:"no-store"});
+    const data = await response.json();
+    if (!data.success) throw new Error(data.message || "Access denied");
+
+    data.students.forEach(student => createCard(student, baseUrl));
+    printBtn.disabled = data.students.length === 0;
+    show(`${data.students.length} student QR cards loaded.`, "success");
+  } catch (e) {
+    show("Unable to load students. Check the API URL and Admin Token.", "error");
+  } finally {
+    loadBtn.disabled = false;
+    loadBtn.textContent = "Load Students";
+  }
+}
+
+function createCard(student, baseUrl) {
+  const card = document.createElement("article");
+  card.className = "qr-card";
+  const qrUrl = baseUrl + "?id=" + encodeURIComponent(student.id);
+
+  card.innerHTML = `
+    <h2>CHRYSALIS SCHOOL</h2>
+    <h3>SPORTS DAY STEMATHON 2026</h3>
+    <div class="student">Student: ${esc(student.name)}</div>
+    <div class="details">
+      Roll No: <strong>${esc(student.id)}</strong><br>
+      Class: <strong>${esc(student.class)} ${esc(student.section)}</strong><br>
+      Zone: <strong>${esc(student.zone)}</strong><br>
+      Seat: <strong>Row ${esc(student.row)}, Seat ${esc(student.seat)}</strong>
+    </div>
+    <div class="qr-box"></div>
+    <small>${esc(qrUrl)}</small>
+  `;
+
+  cards.appendChild(card);
+  const box = card.querySelector(".qr-box");
+  new QRCode(box, {
+    text: qrUrl,
+    width: 150,
+    height: 150,
+    correctLevel: QRCode.CorrectLevel.M
+  });
+}
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[c]));
+}
+
+function show(text, type) {
+  msg.textContent = text;
+  msg.className = "message show " + type;
+}
+</script>
+</body>
+</html>
