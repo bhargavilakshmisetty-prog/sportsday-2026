@@ -54,15 +54,19 @@ async function searchStudent(query, fromQr = false) {
     const data = await response.json();
 
     if (!data.success) {
-      if (data.multiple && Array.isArray(data.students)) {
-        renderChoices(data.students);
-      } else {
-        results.innerHTML = "";
-        results.hidden = true;
-        showMessage("❌ Student Not Found<br>Please check the ID, name, or phone number.", "error");
-      }
-      return;
-    }
+  if (data.multiple && Array.isArray(data.students)) {
+    renderChoices(data.students);
+  } else {
+    results.innerHTML = "";
+    results.hidden = true;
+
+    showMessage(
+      "❌ " + escapeHtml(data.message || "Student Not Found"),
+      "error"
+    );
+  }
+  return;
+}
 
     renderStudent(data.student);
   } catch (error) {
